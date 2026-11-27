@@ -1,0 +1,42 @@
+name: Suggestion or another tablet
+description: An idea for Second Chapter, or a request to support another tablet.
+title: "[Suggestion] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ideas are welcome. For another tablet, the essentials are an **unlockable bootloader** and either a
+        [Nura (postmarketOS)](https://nura.eco/) port or a Treble-compatible Android (so a generic LineageOS image can run).
+        Please note that this is a hobby project: there's no promise that a suggestion will be taken up.
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of suggestion?
+      options:
+        - An improvement for the Nexus 7 (2012)
+        - An improvement for the Fire 7 (2022)
+        - Support for another tablet
+        - Documentation
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Your suggestion
+      description: What would you like, and why would it help?
+    validations:
+      required: true
+  - type: input
+    id: tablet
+    attributes:
+      label: For another tablet, its model and codename
+      placeholder: "e.g. Amazon Fire HD 8 (2022), 12th generation"
+  - type: textarea
+    id: support
+    attributes:
+      label: For another tablet, what's known about it
+      description: |
+        Links to a bootloader unlock, a Nura or postmarketOS wiki page, a LineageOS build, or anything else you know.
+        Say whether you own one and could test.

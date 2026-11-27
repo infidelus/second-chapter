@@ -36,7 +36,7 @@ library. Fixes that made it work well as a reader:
 - **KOReader straight on the screen,** without a display server, through a
   device profile: touch, page turns with the volume buttons, Power button
   sleep and a Switch off / Restart menu, automatic sleep and switch-off.
-- **Start-up in about 30 seconds,** down from 45.
+- **Start-up in about 30 seconds** from pressing Power to the book list.
 
 **Amazon Fire 7 (2022).** Once unlocked with a third-party tool, the tablet
 can run a generic Android system image (GSI). Amazon's SELinux policy uses

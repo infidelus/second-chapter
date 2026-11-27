@@ -1,0 +1,13 @@
+# Issues must use one of the forms; these links send other questions to the
+# right place.
+blank_issues_enabled: false
+contact_links:
+  - name: Fire 7 (2022) bootloader unlock
+    url: https://github.com/MeisterLone/Amazon-Fire7-HD-Rooted-Unlocked
+    about: Problems with the unlock tool itself (step 1 of the Fire 7 guide) belong with its developer.
+  - name: KOReader
+    url: https://github.com/koreader/koreader/issues
+    about: Problems with KOReader's own features that aren't specific to these tablets.
+  - name: Nura (formerly postmarketOS) on the Nexus 7
+    url: https://wiki.nura.eco/wiki/Google_Nexus_7_2012_(asus-grouper)
+    about: General Nura support for the tablet, outside Second Chapter's changes.

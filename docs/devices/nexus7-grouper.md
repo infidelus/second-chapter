@@ -89,7 +89,10 @@ takes about a minute longer. U-Boot built with `EFI_LOADER` disabled uses
 `initrd=0x83100000,<size>` to the start-up entries, which makes the EFI
 route work too until Nura rewrites `extlinux.conf`.
 
-### Start-up time: 45 seconds → about 30
+### Start-up time (about 30 seconds)
+
+Nura's usual start-up took about 45 seconds to reach KOReader. These changes
+make it about 30:
 
 | Change | Why |
 |---|---|

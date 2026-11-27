@@ -1,0 +1,99 @@
+name: Problem report
+description: Something in Second Chapter doesn't work as the guides say.
+title: "[Problem] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a problem. Please check the **Troubleshooting** section of the install guide first
+        ([Nexus 7](https://github.com/infidelus/second-chapter/blob/main/docs/nexus7-install-guide.md#troubleshooting),
+        [Fire 7](https://github.com/infidelus/second-chapter/blob/main/docs/fire7-install-guide.md#troubleshooting)).
+
+        **Never include passwords, Wi-Fi details, serial numbers or your network addresses** in an issue: issues are public.
+  - type: dropdown
+    id: tablet
+    attributes:
+      label: Tablet
+      options:
+        - Nexus 7 (2012), Wi-Fi (grouper)
+        - Amazon Fire 7 (2022), 12th generation (quartz)
+        - Other (please say which below)
+    validations:
+      required: true
+  - type: dropdown
+    id: stage
+    attributes:
+      label: Where did it go wrong?
+      options:
+        - "Nexus 7: replacing the bootloader (U-Boot)"
+        - "Nexus 7: building the image"
+        - "Nexus 7: writing the image to the tablet"
+        - "Nexus 7: first start"
+        - "Nexus 7: everyday use (reading, sleep, Wi-Fi, Power button...)"
+        - "Fire 7: backup, verified boot or writing LineageOS (steps 2 to 5)"
+        - "Fire 7: the SELinux fix or starting LineageOS (steps 6 and 7)"
+        - "Fire 7: KOReader or everyday use"
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe what you saw, including any error messages, word for word.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to make it happen again
+      description: The guide step you were on, and what you did. Say if it happens every time.
+      placeholder: |
+        1. Followed the Nexus 7 guide up to Part D.
+        2. ...
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Second Chapter version
+      description: |
+        The commit you used. In your copy of the repository: `git -C ~/second-chapter log -1 --format="%h %cs"`.
+        For the Fire 7, also give the LineageOS file name you installed.
+      placeholder: "e.g. 4647378 2026-11-27"
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: |
+        Whichever apply (on the tablet over SSH for the Nexus 7, or through `adb` in TWRP for the Fire 7):
+
+        - Nexus 7, KOReader or start-up problems: `uname -r; cat /proc/cmdline; journalctl -b -u second-chapter-fb --no-pager | tail -n 50`
+        - Nexus 7, building the image: the last 30 lines the builder printed, and `tail -n 30 ~/second-chapter/build/kernel-build.log` if it failed while building the kernel
+        - Fire 7, restarting into TWRP: `adb shell "sed -n '/Opening SELinux policy/,/Restarting system/p' /sys/fs/pstore/console-ramoops"`
+
+        Remove anything private before posting.
+      render: shell
+  - type: input
+    id: details
+    attributes:
+      label: Tablet details
+      description: "Storage size, and for the Nexus 7 the board revision (E1565 or PM269) if you know it; for the Fire 7, the Fire OS build it had (e.g. RS8338)."
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I've read the troubleshooting section of the install guide.
+          required: true
+        - label: I've removed any passwords, Wi-Fi details, serial numbers and network addresses from this report.
+          required: true
