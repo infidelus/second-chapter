@@ -9,6 +9,10 @@ body:
         Ideas are welcome. For another tablet, the essentials are an **unlockable bootloader** and either a
         [Nura (postmarketOS)](https://nura.eco/) port or a Treble-compatible Android (so a generic LineageOS image can run).
         Please note that this is a hobby project: there's no promise that a suggestion will be taken up.
+
+        **Supporting another tablet needs one to test on.** The maintainer won't buy tablets for this, so a request
+        for a new tablet can only go ahead if you can do the testing yourself (with guidance), or can lend or give a
+        tablet to the project.
   - type: dropdown
     id: kind
     attributes:
@@ -33,10 +37,20 @@ body:
     attributes:
       label: For another tablet, its model and codename
       placeholder: "e.g. Amazon Fire HD 8 (2022), 12th generation"
+  - type: dropdown
+    id: testing
+    attributes:
+      label: For another tablet, who can test it?
+      options:
+        - Not applicable (not about another tablet)
+        - I own one and can do the testing myself
+        - I can lend or give a tablet to the project
+        - Neither (the request can't go ahead for now)
+    validations:
+      required: true
   - type: textarea
     id: support
     attributes:
       label: For another tablet, what's known about it
       description: |
         Links to a bootloader unlock, a Nura or postmarketOS wiki page, a LineageOS build, or anything else you know.
-        Say whether you own one and could test.

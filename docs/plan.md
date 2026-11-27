@@ -37,4 +37,6 @@ start-up work) and the device notes in [devices/](devices/).
   the Nexus 7 (it would need a web viewer, which is heavy for this tablet).
 - A progress sync server, for reading on more than one device.
 - More tablets. Good candidates have an unlockable bootloader and either a
-  Nura port or a Treble-compatible Android vendor.
+  Nura port or a Treble-compatible Android vendor. Each needs someone with
+  the tablet to test it, or a tablet lent or given to the project: none will
+  be bought for this.
