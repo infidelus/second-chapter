@@ -1,0 +1,78 @@
+diff --git a/drivers/soc/tegra/pmc.c b/drivers/soc/tegra/pmc.c
+index a1a296651..93ff49567 100644
+--- a/drivers/soc/tegra/pmc.c
++++ b/drivers/soc/tegra/pmc.c
+@@ -451,6 +451,7 @@ struct tegra_pmc {
+ 	bool tz_only;
+ 
+ 	unsigned long rate;
++	unsigned long clk_m_rate;
+ 
+ 	enum tegra_suspend_mode suspend_mode;
+ 	u32 cpu_good_time;
+@@ -1967,17 +1968,27 @@ void tegra_pmc_set_suspend_mode(enum tegra_suspend_mode mode)
+ 
+ void tegra_pmc_enter_suspend_mode(enum tegra_suspend_mode mode)
+ {
+-	unsigned long long rate = 0;
++	unsigned long long rate = 0, good_rate = 0;
+ 	u64 ticks;
+ 	u32 value;
+ 
+ 	switch (mode) {
+ 	case TEGRA_SUSPEND_LP1:
++		/*
++		 * The CPU rail is switched off at 32 kHz, but the wake-up
++		 * interrupt bursts SCLK (and with it the PMC clock) to CLK_M
++		 * before the PMC counts the CPU power-good time, see the SCLK
++		 * burst policy set up by tegra*_switch_cpu_to_clk32k. Count
++		 * that time in CLK_M cycles so that the CPU rail has ramped up
++		 * before CPU0 is released.
++		 */
+ 		rate = 32768;
++		good_rate = pmc->clk_m_rate ?: rate;
+ 		break;
+ 
+ 	case TEGRA_SUSPEND_LP2:
+ 		rate = pmc->rate;
++		good_rate = rate;
+ 		break;
+ 
+ 	default:
+@@ -1985,11 +1996,18 @@ void tegra_pmc_enter_suspend_mode(enum tegra_suspend_mode mode)
+ 	}
+ 
+ 	if (WARN_ON_ONCE(rate == 0))
+-		rate = 100000000;
++		rate = good_rate = 100000000;
+ 
+-	ticks = pmc->cpu_good_time * rate + USEC_PER_SEC - 1;
++	ticks = pmc->cpu_good_time * good_rate + USEC_PER_SEC - 1;
+ 	do_div(ticks, USEC_PER_SEC);
+ 	tegra_pmc_writel(pmc, ticks, PMC_CPUPWRGOOD_TIMER);
++	/*
++	 * Second Chapter test kernel: show the timer value in the log for LP1
++	 * system sleep only (cpuidle calls this for LP2 many times a second).
++	 */
++	if (mode == TEGRA_SUSPEND_LP1)
++		pr_info("LP1: CPU power-good timer %llu ticks (%u us at %llu Hz)\n",
++			ticks, pmc->cpu_good_time, good_rate);
+ 
+ 	ticks = pmc->cpu_off_time * rate + USEC_PER_SEC - 1;
+ 	do_div(ticks, USEC_PER_SEC);
+@@ -3221,6 +3239,15 @@ static int tegra_pmc_probe(struct platform_device *pdev)
+ 		pmc->rate = clk_get_rate(pmc->clk);
+ 	}
+ 
++	if (IS_ENABLED(CONFIG_PM_SLEEP)) {
++		struct clk *clk_m = clk_get_sys(NULL, "clk_m");
++
++		if (!IS_ERR(clk_m)) {
++			pmc->clk_m_rate = clk_get_rate(clk_m);
++			clk_put(clk_m);
++		}
++	}
++
+ 	pmc->dev = &pdev->dev;
+ 
+ 	err = tegra_pmc_init(pmc);

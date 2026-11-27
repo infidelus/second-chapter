@@ -1,0 +1,35 @@
+# Second Chapter: start KOReader straight on the screen at boot (no display
+# server).
+#
+# KOReader handles the Power button, sleep, automatic sleep (2 minutes) and
+# automatic switch-off (2 hours) itself. The login manager is set to leave
+# the Power button alone (logind.conf.d/second-chapter.conf), so KOReader
+# doesn't need it, or the rest of the usual start-up, and can start as soon
+# as the system files are ready: about 10 seconds sooner.
+
+[Unit]
+Description=Second Chapter e-reader (KOReader on the framebuffer)
+# Start early: don't wait for the usual system start-up (DefaultDependencies).
+DefaultDependencies=no
+After=systemd-journald.socket systemd-remount-fs.service
+Conflicts=getty@tty1.service shutdown.target
+After=getty@tty1.service
+Before=shutdown.target
+
+[Service]
+Type=simple
+# Close the start-up splash screen (Plymouth) first: when it closes it puts
+# the console back into text mode, which would draw boot messages over
+# KOReader. ("-" ignores it failing, e.g. when there's no splash.)
+ExecStartPre=-/usr/bin/plymouth quit
+ExecStart=/usr/local/libexec/second-chapter/run-koreader-fb
+# Ask KOReader to close properly (saving your place) when stopping or shutting
+# down. (This unit doesn't own the console with TTYPath=: systemd would hang
+# up the console, closing KOReader, before ExecStop could run.)
+ExecStop=/usr/local/libexec/second-chapter/stop-koreader
+TimeoutStopSec=25
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=graphical.target

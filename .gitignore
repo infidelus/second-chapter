@@ -1,0 +1,15 @@
+# Image build folder, and downloaded or built files
+build/
+*.img
+*.bin
+*.tar.*
+*.zip
+*.apk
+
+# Python's cache files
+__pycache__/
+*.pyc
+
+# Local secrets (never commit passwords)
+*.secret
+.env

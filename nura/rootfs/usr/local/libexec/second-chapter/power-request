@@ -1,0 +1,40 @@
+#!/bin/sh
+#
+# Second Chapter: switch off or restart when KOReader asks.
+#
+# KOReader's "Power off" and "Reboot" options (added by the KOReader patch
+# 2-power-options.lua) leave a one-word request in the reader's home folder.
+# second-chapter-power.path notices it and runs this script as root.
+# Only "poweroff" and "reboot" are accepted.
+
+REQUEST=${SC_POWER_REQUEST:-/home/user/.second-chapter-power-request}
+
+log() {
+    logger -t second-chapter "power-request: $*"
+}
+
+# Never follow a link: only an ordinary file is accepted.
+if [ -L "$REQUEST" ] || [ ! -f "$REQUEST" ]; then
+    rm -f "$REQUEST"
+    exit 0
+fi
+
+action=$(head -c 16 "$REQUEST" | head -n 1)
+# Remove the request first, so it can't trigger this again.
+rm -f "$REQUEST"
+
+case "$action" in
+    poweroff)
+        log "KOReader asked to switch off"
+        systemctl poweroff --no-block
+        ;;
+    reboot)
+        log "KOReader asked to restart"
+        systemctl reboot --no-block
+        ;;
+    *)
+        log "ignoring an unrecognised request"
+        ;;
+esac
+
+exit 0

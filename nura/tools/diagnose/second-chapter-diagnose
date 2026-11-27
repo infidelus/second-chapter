@@ -1,0 +1,44 @@
+#!/bin/sh
+#
+# Second Chapter: one-off start-up check, for when the tablet can't be
+# reached over the network. Writes what it finds to the system log, which can
+# be read from a PC through U-Boot's "mount internal storage" mode:
+#   journalctl -D /mnt/tablet/var/log/journal -b 0 -u second-chapter-diagnose
+#
+# Changes nothing on the tablet except a test of loading two drivers.
+
+DEB=/opt/second-chapter/debian
+rel=$(uname -r)
+
+section() { echo; echo "===== $*"; }
+
+section "Kernel and command line"
+uname -a
+cat /proc/cmdline
+
+section "Module folder for $rel"
+ls -la /lib "/lib/modules" "/usr/lib/modules" 2>&1
+ls -la "/lib/modules/$rel" 2>&1 | head -n 20
+
+section "Mounts on or under /lib, /usr, /opt"
+grep -E ' /(lib|usr|opt)[ /]| / ' /proc/self/mountinfo
+
+section "Module lookup and loading"
+modprobe -n -v evdev 2>&1
+modprobe -v evdev 2>&1; echo "modprobe evdev: exit $?"
+modprobe -v brcmfmac 2>&1; echo "modprobe brcmfmac: exit $?"
+grep -E '^(evdev|brcmfmac) ' /proc/modules
+ls -la /dev/input 2>&1
+
+section "Debian environment"
+ls -la "$DEB/usr/bin/env" "$DEB/usr/lib/ld-linux-armhf.so.3" "$DEB/usr/lib/arm-linux-gnueabihf/ld-linux-armhf.so.3" 2>&1
+chroot "$DEB" /usr/bin/true; echo "chroot true: exit $?"
+chroot "$DEB" /bin/sh -c 'echo shell inside Debian works'; echo "chroot sh: exit $?"
+# Run a Debian program through its own loader, outside chroot: it prints a
+# clear message if a library is missing or unreadable.
+"$DEB/usr/lib/arm-linux-gnueabihf/ld-linux-armhf.so.3" \
+    --library-path "$DEB/usr/lib/arm-linux-gnueabihf" "$DEB/usr/bin/env" true
+echo "Debian loader directly: exit $?"
+
+section "Kernel messages (last 40)"
+dmesg | tail -n 40

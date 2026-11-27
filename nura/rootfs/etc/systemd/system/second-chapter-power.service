@@ -1,0 +1,9 @@
+# Second Chapter: switch off or restart when KOReader asks.
+# Started by second-chapter-power.path.
+
+[Unit]
+Description=Second Chapter: power off or restart when KOReader asks
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/libexec/second-chapter/power-request

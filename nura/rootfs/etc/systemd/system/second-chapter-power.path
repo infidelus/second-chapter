@@ -1,0 +1,12 @@
+# Second Chapter: watch for "Power off" and "Reboot" requests from KOReader.
+# See /usr/local/libexec/second-chapter/power-request.
+
+[Unit]
+Description=Second Chapter: watch for power requests from KOReader
+
+[Path]
+PathExists=/home/user/.second-chapter-power-request
+Unit=second-chapter-power.service
+
+[Install]
+WantedBy=multi-user.target

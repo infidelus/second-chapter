@@ -1,0 +1,27 @@
+From: Second Chapter
+Subject: [PATCH] drm/grate: fbdev: use XBGR8888 so KOReader colours are right
+
+KOReader writes red in the lowest byte and its EPUB renderer cannot swap
+channels, so on XRGB8888 red and blue appeared swapped. The Tegra display
+supports XBGR8888 and the console reads the bitfields, so use that.
+(The grate kernel builds drivers/gpu/drm/grate, not drivers/gpu/drm/tegra.)
+
+---
+--- a/drivers/gpu/drm/grate/fbdev.c	2026-11-25 12:13:28.153111631 +0000
++++ b/drivers/gpu/drm/grate/fbdev.c	2026-11-25 12:13:28.210155942 +0000
+@@ -92,6 +92,15 @@
+ 
+ 	cmd.pixel_format = drm_mode_legacy_fb_format(sizes->surface_bpp,
+ 						     sizes->surface_depth);
++	/*
++	 * Second Chapter: use red-green-blue byte order (XBGR8888) rather
++	 * than the usual XRGB8888, as KOReader draws straight to the
++	 * framebuffer in that order, and its EPUB renderer can't swap red and
++	 * blue itself. The display supports both; the text console reads the
++	 * order from the framebuffer settings, so it's unaffected.
++	 */
++	if (cmd.pixel_format == DRM_FORMAT_XRGB8888)
++		cmd.pixel_format = DRM_FORMAT_XBGR8888;
+ 
+ 	size = cmd.pitches[0] * cmd.height;
+ 

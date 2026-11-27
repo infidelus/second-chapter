@@ -1,0 +1,37 @@
+From: Second Chapter
+Subject: [PATCH] soc/tegra: pmc: power off grouper instead of restarting
+
+Google's bootloader has a battery-status mode the kernel reboots into on
+power-off when USB is connected. U-Boot lacks it and boots normally, and
+smb347 reports USB online without a cable, so power-off always restarted.
+
+---
+--- a/drivers/soc/tegra/pmc.c	2026-11-23 20:52:09.292770728 +0000
++++ b/drivers/soc/tegra/pmc.c	2026-11-23 20:52:09.296950102 +0000
+@@ -1291,20 +1291,14 @@
+ 
+ static int tegra_pmc_power_off_handler(struct sys_off_data *data)
+ {
+-	struct tegra_pmc *pmc = data->cb_data;
+-
+ 	/*
+-	 * Reboot Nexus 7 into special bootloader mode if USB cable is
+-	 * connected in order to display battery status and power off.
++	 * Second Chapter: upstream reboots the Nexus 7 into a special mode of
++	 * Google's original bootloader here when a USB cable is connected, to
++	 * show the battery status. U-Boot has no such mode and simply starts
++	 * the system again. And smb347 reports USB as online even with no
++	 * cable, so every power-off became a restart. Do nothing, so the
++	 * MAX77663 power chip switches the tablet off.
+ 	 */
+-	if (of_machine_is_compatible("asus,grouper") &&
+-	    power_supply_is_system_supplied()) {
+-		const u32 go_to_charger_mode = 0xa5a55a5a;
+-
+-		tegra_pmc_writel(pmc, go_to_charger_mode, PMC_SCRATCH37);
+-		tegra_pmc_restart(pmc);
+-	}
+-
+ 	return NOTIFY_DONE;
+ }
+ 

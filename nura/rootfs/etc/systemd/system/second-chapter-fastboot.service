@@ -1,0 +1,21 @@
+# Second Chapter: start without Nura's start-up file system (initramfs) from
+# now on, which saves about 4 seconds at every start-up.
+#
+# A freshly written image needs the start-up file system on its first start
+# (it expands the system partition to fill the storage), so the image starts
+# with the "second-chapter" entry in /boot/extlinux/extlinux.conf. Once the
+# system is running, this switches the default to "second-chapter-fast"
+# (same kernel, no start-up file system), then disables itself.
+
+[Unit]
+Description=Second Chapter: use the quick start-up entry from now on
+RequiresMountsFor=/boot
+ConditionPathExists=/boot/extlinux/extlinux.conf
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'grep -q "^label second-chapter-fast$" /boot/extlinux/extlinux.conf && sed -i "s/^default .*/default second-chapter-fast/" /boot/extlinux/extlinux.conf'
+ExecStartPost=/bin/systemctl disable second-chapter-fastboot.service
+
+[Install]
+WantedBy=multi-user.target

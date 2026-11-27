@@ -1,0 +1,76 @@
+#!/bin/sh
+#
+# Second Chapter: run KOReader straight on the screen (framebuffer), with no
+# display server. Started by second-chapter-fb.service, as root (KOReader
+# controls sleep and the backlight itself).
+#
+# KOReader's Kobo build lives in the Debian environment (/opt/koreader-fb),
+# with the Second Chapter device profile in its settings folder (KO_HOME).
+
+set -eu
+
+DEBIAN_ROOT=/opt/second-chapter/debian
+KO_DIR=/opt/koreader-fb
+READER_USER=user
+KO_HOME=/home/$READER_USER/.config/koreader-fb
+REQUEST=/home/$READER_USER/.second-chapter-power-request
+TTY=/dev/tty1
+
+is_mounted() {
+    awk -v p="$1" '$2 == p { found = 1 } END { exit !found }' /proc/mounts
+}
+
+bind_dir() {
+    mkdir -p "$2"
+    is_mounted "$2" || mount --bind "$1" "$2"
+}
+
+[ -x "$DEBIAN_ROOT$KO_DIR/koreader/luajit" ] || { echo "KOReader (Kobo build) isn't installed" >&2; exit 1; }
+
+# Log how long each step takes (seconds since the kernel started), to help
+# make start-up quicker.
+step() { echo "Second Chapter start-up: $1 at $(cut -d' ' -f1 /proc/uptime) s"; }
+step "script started"
+
+# Deep sleep is only safe with the Second Chapter kernel (LP1 fix). On any
+# other kernel, make KOReader's "mem" sleep use freeze instead.
+case "$(uname -r)" in
+    *-sc) echo deep > /sys/power/mem_sleep 2>/dev/null || true ;;
+    *)    echo s2idle > /sys/power/mem_sleep ;;
+esac
+
+# KOReader starts early in start-up, before the system loads the input
+# driver (evdev) that gives the touchscreen and buttons their /dev/input
+# entries, so load it here and wait (up to 5 seconds) for them to appear.
+modprobe evdev 2>/dev/null || true
+i=0
+while [ ! -e /dev/input/event0 ] && [ "$i" -lt 50 ]; do sleep 0.1; i=$((i + 1)); done
+step "input ready"
+
+# Share what KOReader needs with the Debian environment.
+is_mounted "$DEBIAN_ROOT/proc" || mount -t proc proc "$DEBIAN_ROOT/proc"
+is_mounted "$DEBIAN_ROOT/sys"  || mount -t sysfs sysfs "$DEBIAN_ROOT/sys"
+bind_dir /dev     "$DEBIAN_ROOT/dev"
+bind_dir /dev/pts "$DEBIAN_ROOT/dev/pts"
+bind_dir /dev/shm "$DEBIAN_ROOT/dev/shm"
+bind_dir /home    "$DEBIAN_ROOT/home"
+cp -L /etc/localtime   "$DEBIAN_ROOT/etc/localtime"
+cp -L /etc/resolv.conf "$DEBIAN_ROOT/etc/resolv.conf" 2>/dev/null || true
+step "Debian environment ready"
+
+# Show the first console, stop it blanking the screen and make sure the
+# display is on. (KOReader itself puts the console into graphics mode, so it
+# doesn't draw text over KOReader: see its device profile.)
+chvt 1
+printf '\033[9;0]' > "$TTY"
+echo 0 > /sys/class/graphics/fb0/blank 2>/dev/null || true
+
+step "starting KOReader"
+
+# Run KOReader. (The login manager leaves the Power button to KOReader:
+# see logind.conf.d/second-chapter.conf.) Exit code 85 means "restart
+# KOReader".
+exec chroot "$DEBIAN_ROOT" /usr/bin/env -i \
+        HOME=/root KO_HOME="$KO_HOME" SC_POWER_REQUEST="$REQUEST" \
+        PATH=/usr/sbin:/usr/bin:/sbin:/bin LANG=C.UTF-8 \
+        /bin/sh -c "cd $KO_DIR/koreader && while :; do ./luajit reader.lua; rc=\$?; [ \$rc -eq 85 ] || exit \$rc; done"
